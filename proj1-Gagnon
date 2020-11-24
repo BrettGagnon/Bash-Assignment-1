@@ -1,0 +1,73 @@
+#!/bin/bash
+#Assignment 1
+#Shell Scripting
+#Brett Gagnon, 3/2/2020
+
+#flag is set to false until -a is read from command line
+FINDALL=false
+case $PATH in
+
+:*)
+PATH=".:$PATH"
+;;
+*::*)
+PATH=`echo $PATH | sed -e 's/::/:.:/g'`
+;;
+*:)
+PATH="$PATH:."
+;;
+esac
+
+# Case to check if the first command is '-a'. If it is, set flag to true and shift
+case "$1" in
+  -a)
+        FINDALL=true
+        shift
+        ;;
+esac
+
+# While loop to go through every file in list of commands
+while [ $# -gt 0 ]
+do
+    file=$1
+    filefound=false
+    # Case to check if the file starts with a / and is executable
+    case "$file" in
+        */*)
+            if [ -x $file ]
+            then
+                echo $file
+		filefound=true
+            fi
+            ;;
+         *)
+            # Search $PATH for $1
+	    #Process the PATH and make each peice of the PATH be a positional parameter.
+            IFS=$OLDIFS
+            IFS=:
+            #set -- $PATH The set PATH here changes parameter values, causes program to malfunction...
+            #IFS=$OLDIFS
+            
+            for P in $PATH
+            do
+            #It is not enough to just check if the file is executable, becuase directories have the execute permissions set. You must check that it is both a file and executbale.
+	    if [ ! -d "$P/$file" -a -x "$P/$file" ]
+              then
+		  filefound=true
+                  echo $P/$file
+                  # Breaks the loop after the first match if "-a" flag is not set to true
+                  if [ "$FINDALL" != true ]
+                  then
+                    break
+                  fi
+              fi
+            done
+            ;;
+    esac
+    #If file is not found, then echo an error message
+    if [ "$filefound" = "false" ]
+    then
+      echo $file NOT FOUND
+    fi
+    shift
+done
